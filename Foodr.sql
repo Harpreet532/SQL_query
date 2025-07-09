@@ -1,61 +1,17 @@
---Finding Registration date of users
-SELECT
-	USER_ID,
-	MIN(ORDER_DATE) AS REG_DATE
-FROM
-	ORDERS
-GROUP BY
-	USER_ID
-ORDER BY
-	USER_ID;
+ --Calculating Revenue 
+SELECT  
+  order_id,  
+  SUM(meal_price * order_quantity) AS revenue  
+FROM meals  
+JOIN orders ON meals.meal_id = orders.meal_id  
+GROUP BY order_id;
 
---Finding the number of registered users per month
-WITH
-	REG_DATES AS (
-		SELECT
-			MIN(ORDER_DATE) AS REG_DATE,
-			USER_ID
-		FROM
-			ORDERS
-		GROUP BY
-			USER_ID
-	)
-SELECT
-	DATE_TRUNC('month', REG_DATE)::DATE AS FOODR_MONTH,
-	COUNT(DISTINCT USER_ID) AS NEW_USERS
-	FROM REG_DATES
-GROUP BY
-	FOODR_MONTH
-ORDER BY
-	FOODR_MONTH;
-
---Active user query
-WITH
-	REG_DATES AS (
-		SELECT
-			USER_ID,
-			MIN(ORDER_DATE) AS REG_DATE
-		FROM
-			ORDERS
-		GROUP BY
-			USER_ID
-	), REGISTRATIONS AS (
-		SELECT
-			DATE_TRUNC('month', REG_DATE)::DATE AS FOODR_MONTH,
-			COUNT(DISTINCT USER_ID) AS REGS
-		FROM
-			REG_DATES
-		GROUP BY
-			FOODR_MONTH)
-SELECT
-	FOODR_MONTH,
-	REGS,
-	SUM(REGS) OVER (
-		ORDER BY
-			FOODR_MONTH ASC
-	) AS REGS_RT
-FROM REGISTRATIONS
-ORDER BY
-	FOODR_MONTH ASC
-LIMIT
-	5;
+--Calculating Cost 
+SELECT  
+  meals.meal_id,   
+  SUM(meal_cost * stocked_quantity) AS cost_of_stock   
+FROM meals  
+JOIN stock ON meals.meal_id = stock.meal_id  
+GROUP BY meals.meal_id  
+ORDER BY cost_of_stock DESC  
+LIMIT 5;
